@@ -113,8 +113,16 @@
             AI‑style Code Rewriter
           </h1>
           <div class="flex items-center gap-2">
-            <button id="openSettingsBtn" class="group inline-flex items-center gap-2 rounded-full bg-white/10 hover:bg-white/15 active:scale-[0.98] transition-transform ease-ios px-3 py-1.5">
-              <svg class="w-4 h-4 opacity-90 group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09c-.66 0-1.26.38-1.54.97Z"/></svg>
+            <button id="openSettingsBtn" class="group inline-flex items-center gap-2 rounded-full bg-white/10 hover:bg-white/15 active:scale-[0.98] transition-transform ease-ios px-3 py-1.5" aria-label="Open settings">
+              <!-- Simplified, crisper Settings icon (sliders) for better legibility -->
+              <svg class="w-4 h-4 opacity-90 group-hover:opacity-100 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <line x1="4" y1="6" x2="20" y2="6"/>
+                <line x1="4" y1="12" x2="20" y2="12"/>
+                <line x1="4" y1="18" x2="20" y2="18"/>
+                <circle cx="9" cy="6" r="2"/>
+                <circle cx="15" cy="12" r="2"/>
+                <circle cx="7" cy="18" r="2"/>
+              </svg>
               <span class="text-sm">Settings</span>
             </button>
           </div>
@@ -162,16 +170,16 @@
         <!-- 错误提示（默认隐藏） -->
         <div id="errorBox" class="hidden rounded-xl border border-red-500/30 bg-red-400/10 text-red-200 px-4 py-3"></div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
           <button id="transformBtn" class="inline-flex items-center justify-center rounded-full accent-btn active:scale-[0.98] transition-transform ease-ios px-5 py-3 text-sm font-medium shadow-ios">
             <span id="transformText">Transform</span>
           </button>
 
           <!-- 进度条（纤细） -->
-          <div class="flex-1 h-2 rounded-full overflow-hidden progress-track">
+          <div class="flex-1 basis-[65%] h-2 rounded-full overflow-hidden progress-track">
             <div id="progressBar" class="h-full w-0 rounded-full progress-bar"></div>
           </div>
-          <div id="progressText" class="text-xs text-white/70 w-[140px] text-right">Ready</div>
+          <div id="progressText" class="text-xs text-white/70 w-[110px] text-right">Ready</div>
         </div>
 
         <p class="text-xs text-white/50">Tip: Press <kbd class="px-1.5 py-0.5 bg-white/10 rounded border border-white/15">⌘/Ctrl</kbd> + <kbd class="px-1.5 py-0.5 bg-white/10 rounded border border-white/15">Enter</kbd> to Transform</p>
@@ -215,8 +223,57 @@
               <select id="commentLang" class="w-full rounded-xl bg-black/40 border border-white/15 focus:ring-2 focus:ring-white/30 px-3 py-2">
                 <option value="en" selected>English</option>
                 <option value="zh">中文（简体）</option>
+                <option value="ja">日本語</option>
+                <option value="ko">한국어</option>
+                <option value="es">Español</option>
+                <option value="de">Deutsch</option>
+                <option value="fr">Français</option>
               </select>
               <p class="mt-1 text-xs text-white/50">Controls the language of comments the AI adds to your code.</p>
+            </div>
+
+            <!-- 注释风格（JSDoc / Google / NumPy / reST / Doxygen / Auto） -->
+            <div>
+              <label for="commentStyle" class="block text-sm text-white/70 mb-1">Comment style</label>
+              <select id="commentStyle" class="w-full rounded-xl bg-black/40 border border-white/15 focus:ring-2 focus:ring-white/30 px-3 py-2">
+                <option value="auto" selected>Auto (language‑aware)</option>
+                <option value="jsdoc">JSDoc / TSDoc</option>
+                <option value="google">Google (Python)</option>
+                <option value="numpy">NumPy (Python)</option>
+                <option value="rst">reStructuredText (Python)</option>
+                <option value="doxygen">Doxygen / Javadoc (C/C++/Java/C#)</option>
+              </select>
+              <p class="mt-1 text-xs text-white/50">Pick a doc style. Auto chooses based on the detected language.</p>
+            </div>
+
+            <!-- 注释详尽程度（Minimal / Standard / Detailed） -->
+            <div>
+              <label for="commentVerbosity" class="block text-sm text-white/70 mb-1">Comment detail level</label>
+              <select id="commentVerbosity" class="w-full rounded-xl bg-black/40 border border-white/15 focus:ring-2 focus:ring-white/30 px-3 py-2">
+                <option value="minimal">Minimal</option>
+                <option value="standard" selected>Standard</option>
+                <option value="detailed">Detailed</option>
+              </select>
+              <p class="mt-1 text-xs text-white/50">Controls how deep the AI goes with docs and inline notes.</p>
+            </div>
+
+            <!-- 注释内容包含项 -->
+            <div>
+              <label class="block text-sm text-white/70 mb-1">Include in comments</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <label class="inline-flex items-center gap-2 text-sm text-white/80 select-none">
+                  <input id="includeModuleHeader" type="checkbox" class="rounded bg-black/60 border-white/20" checked /> Module/file header
+                </label>
+                <label class="inline-flex items-center gap-2 text-sm text-white/80 select-none">
+                  <input id="includeEdgeCases" type="checkbox" class="rounded bg-black/60 border-white/20" checked /> Edge cases & assumptions
+                </label>
+                <label class="inline-flex items-center gap-2 text-sm text-white/80 select-none">
+                  <input id="includeComplexity" type="checkbox" class="rounded bg-black/60 border-white/20" /> Time/space complexity
+                </label>
+                <label class="inline-flex items-center gap-2 text-sm text-white/80 select-none">
+                  <input id="includeRationale" type="checkbox" class="rounded bg-black/60 border-white/20" checked /> Inline rationale (non‑obvious logic)
+                </label>
+              </div>
             </div>
 
             <div>
@@ -353,13 +410,87 @@
        */
       function buildMessages() {
         const input = document.getElementById('input').value;
+
+        // --- Read user choices from Settings ---
         const langSel = document.getElementById('commentLang');
+        const styleSel = document.getElementById('commentStyle');
+        const verbSel  = document.getElementById('commentVerbosity');
+        const includeModuleHeader = document.getElementById('includeModuleHeader')?.checked ?? true;
+        const includeEdgeCases    = document.getElementById('includeEdgeCases')?.checked ?? true;
+        const includeComplexity   = document.getElementById('includeComplexity')?.checked ?? false;
+        const includeRationale    = document.getElementById('includeRationale')?.checked ?? true;
+
         const langCode = (langSel && langSel.value) || 'en';
-        const commentLanguage = langCode === 'zh' ? 'Chinese (Simplified)' : 'English';
+        const style    = (styleSel && styleSel.value) || 'auto';
+        const verbosity= (verbSel  && verbSel.value)  || 'standard';
 
-        const system = `You are a senior software engineer who rewrites code into a modern, clean, and idiomatic style while preserving behavior.\n\nCOMMENTING POLICY (rigorous AI style):\n- Write all comments in ${commentLanguage}. Use the correct syntax for the detected language (e.g., // or /* */ for JS/TS/Java, # for Python/Shell, <!-- --> for HTML, -- for SQL).\n- Provide a short module/file header summarizing purpose and key responsibilities.\n- For each function/method, add a brief doc comment with purpose, parameters, return value, and edge cases.\n- Add inline comments only for non-trivial logic, invariants, and reasoning; avoid restating obvious code.\n\nOUTPUT RULES (avoid garbled text):\n- Output RAW CODE ONLY — no Markdown fences, no prose, no HTML escaping.\n- Keep original non-ASCII text unchanged.\n- Use straight ASCII quotes ' and ". Never use curly quotes or full-width punctuation in code.\n- Do NOT emit zero-width characters (U+200B/U+200C/U+200D) or BOM (U+FEFF).\n- Use LF line endings (\\n).\n- Keep APIs/semantics identical; prefer early returns, small functions, clear naming.`;
+        // Map UI code → human‑readable language for the prompt
+        const langMap = {
+          en: 'English', zh: 'Chinese (Simplified)', ja: 'Japanese', ko: 'Korean', es: 'Spanish', de: 'German', fr: 'French'
+        };
+        const commentLanguage = langMap[langCode] || 'English';
 
-        const user = `<code>\n${input}\n</code>`;
+        // Style directive (language‑aware)
+        let styleDirective = '';
+        switch (style) {
+          case 'jsdoc':
+            styleDirective = 'Use JSDoc/TSDoc block comments (/** ... */) with @param, @returns, @throws, and @example where helpful. For TS, include types where obvious.';
+            break;
+          case 'google':
+            styleDirective = 'Use Google‑style Python docstrings. Sections: Args, Returns, Raises, Examples (optional).';
+            break;
+          case 'numpy':
+            styleDirective = 'Use NumPy‑style Python docstrings with Parameters/Returns/Raises/Examples sections.';
+            break;
+          case 'rst':
+            styleDirective = 'Use reStructuredText docstrings (Sphinx) with :param:, :type:, :returns:, :raises: fields.';
+            break;
+          case 'doxygen':
+            styleDirective = 'Use Doxygen/Javadoc‑style block comments with @param, @return, @throws, and brief descriptions.';
+            break;
+          default:
+            styleDirective = 'Choose an idiomatic documentation style based on the detected language: JS/TS → JSDoc/TSDoc; Python → Google (or NumPy for scientific code); Java/C#/C++ → Javadoc/Doxygen; Go → leading // doc comments; Rust → /// doc comments. If unsure, use plain block comments of the language.';
+        }
+
+        // Verbosity directive
+        let verbosityDirective = '';
+        if (verbosity === 'minimal') {
+          verbosityDirective = 'Comments should be minimal: only file header (if enabled), function/method doc comments, and very few inline notes for non‑obvious logic.';
+        } else if (verbosity === 'detailed') {
+          verbosityDirective = 'Comments should be detailed and rigorous: add clear function doc comments with parameter types/constraints, return value, error conditions; include non‑obvious invariants and reasoning as inline comments.';
+        } else {
+          verbosityDirective = 'Comments should be standard: brief function doc comments and short inline notes for tricky parts.';
+        }
+
+        // Inclusion toggles
+        const includeLines = [
+          includeModuleHeader ? 'Include a concise module/file header at the top (purpose, public surface, key dependencies).' : 'Do not add a module/file header.',
+          includeEdgeCases ? 'Explicitly list edge cases and key assumptions in doc comments when relevant.' : 'Do not enumerate edge cases unless strictly necessary.',
+          includeComplexity ? 'Add time/space complexity notes where relevant.' : 'Do not add complexity notes.',
+          includeRationale ? 'Add inline rationale comments for non‑obvious decisions and trade‑offs.' : 'Avoid inline rationale comments unless essential.'
+        ].join('
+');
+
+        // System prompt assembled from the above settings
+        const system = `You are a senior software engineer who rewrites code into a modern, clean, and idiomatic style while preserving behavior.
+
+COMMENTING POLICY (rigorous AI style):
+- Write all comments in ${commentLanguage}. Use the correct syntax for the detected language.
+- ${styleDirective}
+- ${verbosityDirective}
+- ${includeLines}
+
+OUTPUT RULES (avoid garbled text):
+- Output RAW CODE ONLY — no Markdown fences, no prose, no HTML escaping.
+- Keep original non-ASCII text unchanged.
+- Use straight ASCII quotes ' and ". Never use curly quotes or full-width punctuation in code.
+- Do NOT emit zero-width characters (U+200B/U+200C/U+200D) or BOM (U+FEFF).
+- Use LF line endings (\n).
+- Keep APIs/semantics identical; prefer early returns, small functions, clear naming.`;
+
+        const user = `<code>
+${input}
+</code>`;
         return [
           { role: 'system', content: system },
           { role: 'user', content: user },
