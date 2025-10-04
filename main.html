@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="zh-CN" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI 风格代码重写器 · 纯前端直连（LM Studio 适配 / 暗黑默认 / i18n）</title>
+  <!-- 先声明 Tailwind 配置，使其使用 class 方式控制暗黑模式 -->
+  <script>
+    tailwind = { config: { darkMode: 'class' } };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    textarea, input, select { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .container { max-width: 1100px; }
+    code, kbd { background: rgb(248 250 252); padding: 0 .35rem; border-radius: .35rem; }
+    .dark code, .dark kbd { background: rgb(30 41 59); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+  <div class="container mx-auto p-6 space-y-6">
+    <header class="flex items-center justify-between">
+      <div>
+        <h1 id="i-title" class="text-2xl font-bold">AI 风格代码重写器（前端直连 API + Prompt）</h1>
+        <div id="i-tagline" class="text-sm opacity-70">单文件 HTML · 适配 LM Studio 本地 API</div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="themeToggle" class="rounded-xl border px-3 py-1 text-sm hover:bg-slate-100 dark:hover:bg-slate-800" title="Toggle theme">🌙/☀️</button>
+        <select id="langSelect" class="rounded-xl border px-3 py-1 text-sm bg-white dark:bg-slate-800 dark:border-slate-700">
+          <option value="zh">中文</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+    </header>
+
+    <!-- API / 基础配置 -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-2xl shadow dark:bg-slate-800">
+      <div class="col-span-1 space-y-2">
+        <label id="i-apiKeyLabel" class="text-sm font-medium">API Key（LM Studio 可留空或填 <code>lm-studio</code>）</label>
+        <input id="apiKey" type="password" placeholder="可留空；LM Studio 常用：lm-studio" class="w-full rounded-xl border p-2 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" />
+        <label class="inline-flex items-center gap-2 text-sm mt-1">
+          <input id="rememberKey" type="checkbox" />
+          <span id="i-remember">记住密钥到本机（localStorage）</span>
+        </label>
+        <div id="i-tokenHint" class="text-xs opacity-70">不填时将不发送 <code>Authorization</code> 请求头（更兼容部分本地服务）。</div>
+      </div>
+      <div class="col-span-1 space-y-2">
+        <label id="i-endpointLabel" class="text-sm font-medium">LLM 端点（OpenAI 兼容）</label>
+        <input id="endpoint" placeholder="http://localhost:1234/v1/chat/completions" class="w-full rounded-xl border p-2 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" />
+        <p id="i-endpointHint" class="text-xs opacity-70">LM Studio 默认端口 <code>1234</code>，使用 <b>http</b>；需要在 LM Studio 中启用 <i>CORS</i>。</p>
+        <div class="flex gap-2 text-sm mt-1">
+          <button id="presetLMStudio" class="rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">LM Studio 预设</button>
+          <button id="probeModels" class="rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">检测模型</button>
+        </div>
+        <div id="modelsBox" class="text-xs mt-2 space-y-1"></div>
+      </div>
+      <div class="col-span-1 space-y-2">
+        <label id="i-modelLabel" class="text-sm font-medium">模型名</label>
+        <input id="model" placeholder="如：qwen2.5-7b-instruct / llama3.1-8b-instruct" class="w-full rounded-xl border p-2 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" />
+        <div class="grid grid-cols-3 gap-3 text-sm">
+          <div class="space-y-1">
+            <label id="i-temp">温度</label>
+            <input id="temperature" type="range" min="0" max="1" step="0.05" value="0.2" class="w-full" />
+            <div id="temperatureVal" class="opacity-70">0.20</div>
+          </div>
+          <div class="space-y-1">
+            <label id="i-intensity">强度（1-3）</label>
+            <input id="intensity" type="range" min="1" max="3" step="1" value="2" class="w-full" />
+            <div id="intensityVal" class="opacity-70">2</div>
+          </div>
+          <div class="space-y-1">
+            <label id="i-maxTokens">max_tokens</label>
+            <input id="maxTokens" type="number" min="1" placeholder="可留空" class="w-full rounded-xl border p-2 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Prompt / Style Profile -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-white p-4 rounded-2xl shadow space-y-2 dark:bg-slate-800">
+        <div class="flex items-center justify-between">
+          <h2 id="i-styleTitle" class="font-semibold">Style Profile（可编辑 JSON）</h2>
+          <button id="resetStyle" class="text-sm underline">重置</button>
+        </div>
+        <textarea id="styleProfile" class="w-full h-64 text-sm rounded-xl border p-2 mono bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"></textarea>
+      </div>
+      <div class="bg-white p-4 rounded-2xl shadow space-y-2 dark:bg-slate-800">
+        <div class="flex items-center justify-between">
+          <h2 id="i-systemTitle" class="font-semibold">System Prompt（可按需修改）</h2>
+        </div>
+        <textarea id="systemTemplate" class="w-full h-64 text-sm rounded-xl border p-2 mono bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" readonly></textarea>
+      </div>
+    </section>
+
+    <!-- 编辑区 -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-white p-4 rounded-2xl shadow space-y-2 dark:bg-slate-800">
+        <div class="flex items-center justify-between">
+          <h2 id="i-inputTitle" class="font-semibold">输入代码</h2>
+          <div class="flex items-center gap-2">
+            <button id="loadSample" class="text-sm rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">填入示例</button>
+          </div>
+        </div>
+        <textarea id="userCode" class="w-full h-72 text-sm rounded-xl border p-2 mono bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">function add(a,b){return a+b}</textarea>
+      </div>
+      <div class="bg-white p-4 rounded-2xl shadow space-y-2 dark:bg-slate-800">
+        <div class="flex items-center justify-between">
+          <h2 id="i-outputTitle" class="font-semibold">输出代码</h2>
+          <div class="flex items-center gap-2">
+            <button id="copyOut" class="text-sm rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">复制</button>
+            <button id="clearOut" class="text-sm rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">清空</button>
+          </div>
+        </div>
+        <textarea id="aiCode" class="w-full h-72 text-sm rounded-xl border p-2 mono bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" readonly></textarea>
+      </div>
+    </section>
+
+    <!-- 动作区 -->
+    <section class="flex items-center gap-3">
+      <button id="runBtn" class="rounded-2xl px-4 py-2 bg-black text-white disabled:opacity-50">一键转换</button>
+      <span id="i-hint" class="text-sm opacity-70">LM Studio：请启用 <em>CORS</em>；端点形如 <code>http://localhost:1234/v1/chat/completions</code>。</span>
+    </section>
+
+    <div id="errorBox" class="hidden bg-red-50 text-red-700 p-3 rounded-xl border border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-700"></div>
+
+    <details class="bg-white p-4 rounded-2xl shadow dark:bg-slate-800">
+      <summary id="i-sseTitle" class="font-semibold cursor-pointer">想要流式输出？（可选）</summary>
+      <ol id="i-sseList" class="list-decimal list-inside space-y-1 text-sm mt-2 opacity-80">
+        <li>确认 LLM 供应商支持浏览器直连的 SSE（CORS 允许 + <code>stream: true</code>）。</li>
+        <li>请求体添加 <code>stream: true</code>，并用 <code>res.body.getReader()</code> 逐块读取。</li>
+        <li>解析 Server-Sent Events（逐行读取，以 <code>data:</code> 开头的行做 JSON.parse，直到 <code>[DONE]</code>）。</li>
+      </ol>
+    </details>
+
+    <footer id="i-footer" class="text-xs opacity-70 pb-8">
+      安全提示：前端直连会暴露密钥给终端用户，仅适合个人/内网。对外发布请改用临时令牌或网关。
+    </footer>
+  </div>
+
+  <script>
+    // ---------------- i18n ----------------
+    const I18N = {
+      zh: {
+        title: 'AI 风格代码重写器（前端直连 API + Prompt）',
+        tagline: '单文件 HTML · 适配 LM Studio 本地 API',
+        apiKeyLabel: 'API Key（LM Studio 可留空或填 <code>lm-studio</code>）',
+        remember: '记住密钥到本机（localStorage）',
+        tokenHint: '不填时将不发送 <code>Authorization</code> 请求头（更兼容部分本地服务）。',
+        endpointLabel: 'LLM 端点（OpenAI 兼容）',
+        endpointHint: 'LM Studio 默认端口 <code>1234</code>，使用 <b>http</b>；需要在 LM Studio 中启用 <i>CORS</i>。',
+        modelLabel: '模型名',
+        temp: '温度',
+        intensity: '强度（1-3）',
+        maxTokens: 'max_tokens',
+        styleTitle: 'Style Profile（可编辑 JSON）',
+        systemTitle: 'System Prompt（可按需修改）',
+        inputTitle: '输入代码',
+        outputTitle: '输出代码',
+        copy: '复制', clear: '清空', sample: '填入示例', reset: '重置',
+        run: '一键转换', preset: 'LM Studio 预设', probe: '检测模型',
+        hint: 'LM Studio：请启用 <em>CORS</em>；端点形如 <code>http://localhost:1234/v1/chat/completions</code>。',
+        sseTitle: '想要流式输出？（可选）',
+        sseList: [
+          '确认 LLM 供应商支持浏览器直连的 SSE（CORS 允许 + <code>stream: true</code>）。',
+          '请求体添加 <code>stream: true</code>，并用 <code>res.body.getReader()</code> 逐块读取。',
+          '解析 Server-Sent Events（逐行读取，以 <code>data:</code> 开头的行做 JSON.parse，直到 <code>[DONE]</code>）。'
+        ],
+        footer: '安全提示：前端直连会暴露密钥给终端用户，仅适合个人/内网。对外发布请改用临时令牌或网关。',
+        placeholders: {
+          apiKey: '可留空；LM Studio 常用：lm-studio',
+          endpoint: 'http://localhost:1234/v1/chat/completions',
+          model: '如：qwen2.5-7b-instruct / llama3.1-8b-instruct',
+          maxTokens: '可留空'
+        },
+        errors: {
+          fill: '请填写 端点 / 模型名，并输入代码。',
+          notJSON: '返回不是 JSON：',
+          http: '检查 CORS / 端点路径 / 模型名 / 端口。',
+          probing: '检测中…',
+          noModels: '未返回模型；请确认 LM Studio 已加载模型。',
+          probeFail: '检测失败：'
+        }
+      },
+      en: {
+        title: 'AI-style Code Rewriter (Frontend-only API + Prompt)',
+        tagline: 'Single-file HTML · Works with LM Studio local API',
+        apiKeyLabel: 'API Key (LM Studio can be empty or "lm-studio")',
+        remember: 'Remember key on this device (localStorage)',
+        tokenHint: 'If empty, the <code>Authorization</code> header will NOT be sent.',
+        endpointLabel: 'LLM Endpoint (OpenAI-compatible)',
+        endpointHint: 'LM Studio default port is <code>1234</code>. Use <b>http</b>; enable <i>CORS</i> in LM Studio.',
+        modelLabel: 'Model',
+        temp: 'Temperature',
+        intensity: 'Intensity (1-3)',
+        maxTokens: 'max_tokens',
+        styleTitle: 'Style Profile (editable JSON)',
+        systemTitle: 'System Prompt (editable as needed)',
+        inputTitle: 'Input Code',
+        outputTitle: 'Output Code',
+        copy: 'Copy', clear: 'Clear', sample: 'Load Sample', reset: 'Reset',
+        run: 'Transform', preset: 'LM Studio Preset', probe: 'List Models',
+        hint: 'LM Studio: enable <em>CORS</em>; endpoint looks like <code>http://localhost:1234/v1/chat/completions</code>.',
+        sseTitle: 'Streaming output? (optional)',
+        sseList: [
+          'Ensure your provider supports SSE in the browser (CORS + <code>stream: true</code>).',
+          'Add <code>stream: true</code> to the request and read chunks via <code>res.body.getReader()</code>.',
+          'Parse Server-Sent Events (lines starting with <code>data:</code>) until <code>[DONE]</code>.'
+        ],
+        footer: 'Security: exposing an API key in the browser is risky—use only locally/trusted envs. Prefer a gateway for public use.',
+        placeholders: {
+          apiKey: 'Optional; often "lm-studio"',
+          endpoint: 'http://localhost:1234/v1/chat/completions',
+          model: 'e.g., qwen2.5-7b-instruct / llama3.1-8b-instruct',
+          maxTokens: 'optional'
+        },
+        errors: {
+          fill: 'Please set endpoint / model and paste your code.',
+          notJSON: 'Response is not JSON:\n',
+          http: 'Check CORS / endpoint path / model / port.',
+          probing: 'Probing…',
+          noModels: 'No models returned. Make sure LM Studio has a model loaded.',
+          probeFail: 'Probe failed: '
+        }
+      }
+    };
+
+    function applyI18n(lang) {
+      const t = I18N[lang];
+      // text blocks
+      document.getElementById('i-title').textContent = t.title;
+      document.getElementById('i-tagline').textContent = t.tagline;
+      document.getElementById('i-styleTitle').textContent = t.styleTitle;
+      document.getElementById('i-systemTitle').textContent = t.systemTitle;
+      document.getElementById('i-inputTitle').textContent = t.inputTitle;
+      document.getElementById('i-outputTitle').textContent = t.outputTitle;
+      document.getElementById('i-temp').textContent = t.temp;
+      document.getElementById('i-intensity').textContent = t.intensity;
+      document.getElementById('i-maxTokens').textContent = t.maxTokens;
+      document.getElementById('i-sseTitle').textContent = t.sseTitle;
+      document.getElementById('i-footer').textContent = t.footer;
+      // html blocks
+      document.getElementById('i-apiKeyLabel').innerHTML = t.apiKeyLabel;
+      document.getElementById('i-remember').textContent = t.remember;
+      document.getElementById('i-tokenHint').innerHTML = t.tokenHint;
+      document.getElementById('i-endpointLabel').textContent = t.endpointLabel;
+      document.getElementById('i-endpointHint').innerHTML = t.endpointHint;
+      document.getElementById('i-modelLabel').textContent = t.modelLabel;
+      document.getElementById('i-hint').innerHTML = t.hint;
+      const sseList = document.getElementById('i-sseList');
+      sseList.innerHTML = t.sseList.map(li => `<li>${li}</li>`).join('');
+      // buttons
+      document.getElementById('runBtn').textContent = t.run;
+      document.getElementById('presetLMStudio').textContent = t.preset;
+      document.getElementById('probeModels').textContent = t.probe;
+      document.getElementById('resetStyle').textContent = t.reset;
+      document.getElementById('loadSample').textContent = t.sample;
+      document.getElementById('copyOut').textContent = t.copy;
+      document.getElementById('clearOut').textContent = t.clear;
+      // placeholders
+      document.getElementById('apiKey').placeholder = t.placeholders.apiKey;
+      document.getElementById('endpoint').placeholder = t.placeholders.endpoint;
+      document.getElementById('model').placeholder = t.placeholders.model;
+      document.getElementById('maxTokens').placeholder = t.placeholders.maxTokens;
+      // store
+      localStorage.setItem('aiStyleCoder_lang', lang);
+    }
+
+    function tErrors(lang){ return I18N[lang || localStorage.getItem('aiStyleCoder_lang') || 'zh'].errors; }
+
+    // ---------------- 默认 Style Profile & System Prompt ----------------
+    const DEFAULT_STYLE = {
+      naming: { variables: "camelCase", types: "PascalCase", constants: "UPPER_SNAKE_CASE" },
+      structure: {
+        preferGuardClause: true,
+        extractFunctionThreshold: { lines: 30, branches: 3 },
+        immutabilityPreferred: true,
+        resultObjectShape: { ok: true, data: true, error: true }
+      },
+      async: { preferAsyncAwait: true, timeoutMs: 15000, useAbortController: true },
+      comments: { jsdoc: true, brief: true, withExamples: true },
+      formatting: { sortImports: true, removeUnused: true, trailingComma: "all" },
+      riskPolicy: { highRiskTransforms: ["renamePublicAPI", "changeReturnType"], allow: false }
+    };
+
+    const SYSTEM_TEMPLATE = `You are an expert code rewriter that converts human-written code into clean, \nAI-style code while preserving behavior.\n\nRequirements:\n- Obey the provided Style Profile JSON strictly.\n- Keep public APIs compatible unless the risk policy allows otherwise.\n- Prefer small, composable functions; early-return guard clauses; clear errors.\n- Replace magic numbers/strings with named constants.\n- Use modern language idioms for the input language.\n- Add concise JSDoc/TSDoc or docstrings for public functions only.\n- If input contains multiple files or sections, keep their order and boundaries.\n\nOutput policy:\n- Output ONLY the transformed code for the same language, with no explanation.\n- Do NOT wrap with markdown fences.`;
+
+    // ---------------- DOM refs ----------------
+    const apiKeyEl = document.getElementById('apiKey');
+    const rememberKeyEl = document.getElementById('rememberKey');
+    const endpointEl = document.getElementById('endpoint');
+    const modelEl = document.getElementById('model');
+    const tempEl = document.getElementById('temperature');
+    const tempValEl = document.getElementById('temperatureVal');
+    const intensityEl = document.getElementById('intensity');
+    const intensityValEl = document.getElementById('intensityVal');
+    const maxTokensEl = document.getElementById('maxTokens');
+    const inputLangEl = document.getElementById('inputLang');
+    const userCodeEl = document.getElementById('userCode');
+    const aiCodeEl = document.getElementById('aiCode');
+    const runBtn = document.getElementById('runBtn');
+    const errorBox = document.getElementById('errorBox');
+    const styleProfileEl = document.getElementById('styleProfile');
+    const systemTemplateEl = document.getElementById('systemTemplate');
+    const resetStyleBtn = document.getElementById('resetStyle');
+    const loadSampleBtn = document.getElementById('loadSample');
+    const copyOutBtn = document.getElementById('copyOut');
+    const clearOutBtn = document.getElementById('clearOut');
+    const presetBtn = document.getElementById('presetLMStudio');
+    const probeBtn = document.getElementById('probeModels');
+    const modelsBox = document.getElementById('modelsBox');
+    const langSelect = document.getElementById('langSelect');
+    const themeToggle = document.getElementById('themeToggle');
+
+    // ---------------- 初始值与本地存储 ----------------
+    function init() {
+      styleProfileEl.value = JSON.stringify(DEFAULT_STYLE, null, 2);
+      systemTemplateEl.value = SYSTEM_TEMPLATE;
+
+      // 语言 & 主题初始化
+      const savedLang = localStorage.getItem('aiStyleCoder_lang') || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+      langSelect.value = savedLang;
+      applyI18n(savedLang);
+
+      const savedTheme = localStorage.getItem('aiStyleCoder_theme') || 'dark';
+      if (savedTheme === 'dark') document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+
+      const savedKey = localStorage.getItem('aiStyleCoder_apiKey');
+      if (savedKey) { apiKeyEl.value = savedKey; rememberKeyEl.checked = true; }
+
+      rememberKeyEl.addEventListener('change', () => {
+        if (rememberKeyEl.checked) localStorage.setItem('aiStyleCoder_apiKey', apiKeyEl.value || '');
+        else localStorage.removeItem('aiStyleCoder_apiKey');
+      });
+      apiKeyEl.addEventListener('input', () => { if (rememberKeyEl.checked) localStorage.setItem('aiStyleCoder_apiKey', apiKeyEl.value || ''); });
+
+      tempEl.addEventListener('input', () => (tempValEl.textContent = Number(tempEl.value).toFixed(2)));
+      intensityEl.addEventListener('input', () => (intensityValEl.textContent = String(intensityEl.value)));
+
+      langSelect.addEventListener('change', () => applyI18n(langSelect.value));
+      themeToggle.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        const now = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        localStorage.setItem('aiStyleCoder_theme', now);
+      });
+    }
+
+    // ---------------- 工具函数 ----------------
+    function stripCodeFence(s) {
+      if (!s) return s;
+      const trimmed = s.trim();
+      if (/^```[a-zA-Z]*[\r\n][\s\S]*?[\r\n]```\s*$/.test(trimmed)) {
+        const lines = trimmed.split(/\r?\n/);
+        return lines.slice(1, -1).join('\n');
+      }
+      if (trimmed.startsWith('```') && trimmed.endsWith('```')) return trimmed.slice(3, -3).trim();
+      return s;
+    }
+
+    function buildMessages() {
+      const lang = langSelect.value;
+      const sys = `${SYSTEM_TEMPLATE}\n\nContext:\n- Input language: ${inputLangEl?.value || 'auto'}\n- Intensity (1-3): ${intensityEl.value}\n- Style Profile JSON:\n${styleProfileEl.value}`;
+      const prompt = lang === 'zh'
+        ? `Rewrite the following code into AI-style code, keep behavior the same.\n\n<code>\n${userCodeEl.value}\n</code>`
+        : `Rewrite the following code into AI-style code while preserving behavior.\n\n<code>\n${userCodeEl.value}\n</code>`;
+      return [ { role: 'system', content: sys }, { role: 'user', content: prompt } ];
+    }
+
+    function setBusy(b) { runBtn.disabled = b; runBtn.textContent = b ? (langSelect.value==='zh'?'转换中…':'Working…') : I18N[langSelect.value].run; }
+    function showError(msg) { errorBox.textContent = msg || ''; errorBox.classList.toggle('hidden', !msg); }
+
+    function getBaseUrlFromEndpoint(ep) {
+      try {
+        const url = new URL(ep);
+        const parts = url.pathname.split('/');
+        const idx = parts.findIndex(p => p === 'v1');
+        if (idx !== -1) url.pathname = parts.slice(0, idx + 1).join('/');
+        url.search = ''; url.hash = '';
+        return url.toString().replace(/\/$/, '');
+      } catch { return ep.replace(/\/(chat\/completions|completions|embeddings).*$/, '/v1'); }
+    }
+
+    async function probeModels() {
+      const errs = tErrors(langSelect.value);
+      modelsBox.textContent = errs.probing;
+      try {
+        const base = getBaseUrlFromEndpoint(endpointEl.value.trim());
+        const headers = { 'Content-Type': 'application/json' };
+        const key = apiKeyEl.value.trim();
+        if (key) headers['Authorization'] = `Bearer ${key}`;
+        const res = await fetch(base + '/models', { method: 'GET', headers });
+        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+        const data = await res.json();
+        const list = (data?.data || []).map(m => m.id).filter(Boolean);
+        if (!list.length) { modelsBox.textContent = errs.noModels; return; }
+        modelsBox.innerHTML = '';
+        list.forEach(id => {
+          const btn = document.createElement('button');
+          btn.textContent = id;
+          btn.className = 'text-xs rounded-lg border px-2 py-1 mr-2 mb-2 hover:bg-slate-50 dark:hover:bg-slate-700';
+          btn.addEventListener('click', () => { modelEl.value = id; });
+          modelsBox.appendChild(btn);
+        });
+      } catch (e) { modelsBox.textContent = errs.probeFail + (e?.message || String(e)); }
+    }
+
+    // ---------------- 主流程 ----------------
+    async function runTransform() {
+      showError('');
+      aiCodeEl.value = '';
+
+      const endpoint = endpointEl.value.trim();
+      const model = modelEl.value.trim();
+      const temperature = Number(tempEl.value);
+      const maxTokens = Number(maxTokensEl.value);
+      const key = apiKeyEl.value.trim();
+      const errs = tErrors(langSelect.value);
+
+      if (!endpoint || !model || !userCodeEl.value.trim()) { showError(errs.fill); return; }
+
+      setBusy(true);
+      try {
+        const body = { model, temperature, messages: buildMessages(), stream: false };
+        if (Number.isFinite(maxTokens) && maxTokens > 0) body.max_tokens = maxTokens;
+        const headers = { 'Content-Type': 'application/json' };
+        if (key) headers['Authorization'] = `Bearer ${key}`;
+        const res = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify(body) });
+        if (!res.ok) { let text = ''; try { text = await res.text(); } catch {} throw new Error(`HTTP ${res.status} ${res.statusText}\n${text || errs.http}`); }
+        let json; try { json = await res.json(); } catch { const raw = await res.text(); throw new Error(errs.notJSON + raw); }
+        const rawOut = (json && json.choices && json.choices[0] && (json.choices[0].message?.content || json.choices[0].text)) || '';
+        aiCodeEl.value = stripCodeFence(rawOut || '');
+      } catch (e) { showError(e?.message || String(e)); }
+      finally { setBusy(false); }
+    }
+
+    // ---------------- 绑定事件 ----------------
+    document.addEventListener('DOMContentLoaded', () => {
+      init();
+      document.getElementById('runBtn').addEventListener('click', runTransform);
+      resetStyleBtn.addEventListener('click', () => (styleProfileEl.value = JSON.stringify(DEFAULT_STYLE, null, 2)));
+      loadSampleBtn.addEventListener('click', () => {
+        userCodeEl.value = `// messy demo\nfunction fetchUsers(page){\n  return fetch('/api/users?page='+page).then(r=>r.json()).then(d=>{\n    if(d && d.list){\n      return d.list\n    } else {\n      return []\n    }\n  })\n}`;
+      });
+      copyOutBtn.addEventListener('click', async () => { try { await navigator.clipboard.writeText(aiCodeEl.value || ''); } catch {} });
+      clearOutBtn.addEventListener('click', () => (aiCodeEl.value = ''));
+      presetBtn.addEventListener('click', () => { endpointEl.value = 'http://localhost:1234/v1/chat/completions'; if (!apiKeyEl.value) apiKeyEl.value = 'lm-studio'; });
+      probeBtn.addEventListener('click', probeModels);
+    });
+  </script>
+</body>
+</html>
