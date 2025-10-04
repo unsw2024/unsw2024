@@ -6,21 +6,21 @@
     <title>AI‑style Code Rewriter • Apple‑inspired</title>
 
     <!--
-      设计说明（Apple 风格要点）
+      Design notes (Apple‑inspired highlights)
       ---------------------------------------------------------------------
-      • Typography: 使用 -apple-system（San Francisco）级联，字重与字距较为内敛。
-      • Layout: 大标题 + 卡片式内容区，充足留白；控件对齐，层级清晰。
-      • Visuals: 暗色基底 + 半透明毛玻璃（backdrop-blur），发光投影适度；细线分割（hairline）。
-      • Motion: 微弱的过渡与缩放反馈，尊重 prefers-reduced-motion。
-      • Clarity: 更少视觉干扰，明确的主按钮（Transform）。
-      • Accessibility: 明确的 aria-label / role，良好的对比度与键盘交互（Cmd/Ctrl+Enter 触发转化）。
+      • Typography: use -apple-system (San Francisco) stack; restrained weights and tracking.
+      • Layout: large title + card sections; generous spacing; aligned controls and clear hierarchy.
+      • Visuals: dark base + translucent glass (backdrop-blur); subtle glow shadows; hairline dividers.
+      • Motion: gentle transitions and scale feedback; honor prefers-reduced-motion.
+      • Clarity: fewer visual distractions; a single primary action (Transform).
+      • Accessibility: explicit aria-label/roles; good contrast; keyboard shortcuts (Cmd/Ctrl+Enter).
     -->
 
-    <!-- Tailwind 配置要在 CDN 之前声明 -->
+    <!-- Tailwind config must be declared before the CDN script -->
     <script>
       /*
-        Tailwind on CDN: 通过全局 tailwind.config 定制字体与阴影等。
-        这里增加 iOS 风格常用的阴影、圆角、以及字体族。
+        Tailwind on CDN: customize fonts and shadows via global tailwind.config.
+        Add iOS-like shadows, radii, and an Apple system font stack.
       */
       window.tailwind = window.tailwind || {};
       tailwind.config = {
@@ -43,14 +43,14 @@
               ios: '0 10px 30px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.06) inset',
             },
             colors: {
-              // 更贴近 Apple 暗色体系的中性色（自定义，仅作接近处理）
+              // Apple-like neutral surfaces (approximation)
               surface: {
                 50: 'rgba(255,255,255,0.04)',
                 100: 'rgba(255,255,255,0.06)',
               },
             },
             transitionTimingFunction: {
-              ios: 'cubic-bezier(0.22, 0.61, 0.36, 1)', // iOS 弹性惯性感
+              ios: 'cubic-bezier(0.22, 0.61, 0.36, 1)', // iOS ease with slight spring feel
             },
             keyframes: {
               pulseSoft: {
@@ -69,23 +69,23 @@
 
     <style>
       /*
-        额外的低层样式：
-        - 毛玻璃卡片（.glass）
-        - 极细分割线（.hairline）
+        Additional low-level styles:
+        - Glass card (.glass)
+        - Hairline divider (.hairline)
       */
       .glass { backdrop-filter: saturate(160%) blur(20px); -webkit-backdrop-filter: saturate(160%) blur(20px); }
       .hairline { border-top: 1px solid rgba(255,255,255,0.06); }
 
-      /* 减少动画偏好：关闭非必要动效 */
+      /* Reduced motion preference: disable non-essential animations */
       @media (prefers-reduced-motion: reduce) {
         .animate-pulseSoft { animation: none !important; }
         * { transition: none !important; }
       }
 
-      /* 聚焦可见性（辅助可及性） */
+      /* Focus visibility (a11y) */
       :focus-visible { outline: 2px solid rgba(255,255,255,0.6); outline-offset: 2px; border-radius: 12px; }
 
-      /* 代码区更友好的等宽字体 */
+      /* Friendlier monospace for code areas */
       textarea, code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
       /* Apple‑style accent button (luminous gradient) */
@@ -102,9 +102,9 @@
 
   <body class="min-h-screen bg-black text-white font-sans selection:bg-white/10">
     <!--
-      顶部导航 —— 大标题 + 右侧工具（设置按钮）
-      - 视觉层级：标题 > 操作控件
-      - 对齐：内容宽度限制在 1200px，保证舒适阅读宽度
+      Top navigation — large title + settings on the right
+      - Hierarchy: title > controls
+      - Content width limited to ~1200px for comfortable reading width
     -->
     <header class="sticky top-0 z-40 bg-black/60 glass backdrop-saturate-150 border-b border-white/10">
       <div class="mx-auto max-w-6xl px-4">
@@ -130,10 +130,10 @@
       </div>
     </header>
 
-    <!-- 主体区域：左右两栏 —— 输入与输出 -->
+    <!-- Main area: two columns — input & output -->
     <main class="mx-auto max-w-6xl px-4 py-6">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- 输入卡片 -->
+        <!-- Input card -->
         <section class="relative rounded-2xl bg-surface-50/50 border border-white/10 glass shadow-ios">
           <div class="p-4 sm:p-6">
             <div class="flex items-center justify-between mb-3">
@@ -144,7 +144,7 @@
           </div>
         </section>
 
-        <!-- 输出卡片 -->
+        <!-- Output card -->
         <section class="relative rounded-2xl bg-surface-50/50 border border-white/10 glass shadow-ios">
           <div class="p-4 sm:p-6">
             <div class="flex items-center justify-between mb-3">
@@ -165,9 +165,9 @@
         </section>
       </div>
 
-      <!-- 操作区：Transform + 进度条 + 状态提示 -->
+      <!-- Action area: Transform button + progress + status -->
       <div class="mt-6 flex flex-col gap-3">
-        <!-- 错误提示（默认隐藏） -->
+        <!-- Error box (hidden by default) -->
         <div id="errorBox" class="hidden rounded-xl border border-red-500/30 bg-red-400/10 text-red-200 px-4 py-3"></div>
 
         <div class="flex items-center gap-2">
@@ -175,7 +175,7 @@
             <span id="transformText">Transform</span>
           </button>
 
-          <!-- 进度条（纤细） -->
+          <!-- Thin progress bar -->
           <div class="flex-1 basis-[65%] h-2 rounded-full overflow-hidden progress-track">
             <div id="progressBar" class="h-full w-0 rounded-full progress-bar"></div>
           </div>
@@ -186,12 +186,12 @@
       </div>
     </main>
 
-    <!-- 设置抽屉（右侧滑出） -->
+    <!-- Settings drawer (slides from the right) -->
     <div id="settingsPanel" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-      <!-- 半透明蒙层 -->
+      <!-- Translucent scrim -->
       <div id="backdrop" class="absolute inset-0 bg-black/50 transition-opacity"></div>
 
-      <!-- 抽屉面板 -->
+      <!-- Drawer panel -->
       <aside class="absolute right-0 top-0 h-full w-full sm:w-[460px] bg-black/80 glass backdrop-saturate-150 border-l border-white/10 shadow-2xl transform translate-x-full transition-transform ease-ios" role="dialog" aria-modal="true" aria-label="Settings">
         <div class="h-full flex flex-col">
           <div class="flex items-center justify-between p-4 sm:p-5 border-b border-white/10">
@@ -203,8 +203,8 @@
 
           <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
             <!--
-              连接参数区域：更贴近 Apple 的表单风格
-              - 标签与控件垂直堆叠，控件使用圆角与毛玻璃背景
+              Connection settings styled with Apple-like forms:
+              - Labels stacked above controls; rounded fields on glassy backgrounds
             -->
             <div>
               <label for="endpoint" class="block text-sm text-white/70 mb-1">Endpoint</label>
@@ -217,7 +217,7 @@
               <input id="model" type="text" class="w-full rounded-xl bg-black/40 border border-white/15 focus:ring-2 focus:ring-white/30 px-3 py-2" placeholder="gpt-4o-mini / llama‑3.1‑8b‑instruct / qwen2.5‑7b‑instruct" />
             </div>
 
-            <!-- 注释语言（影响 AI 生成代码中的注释语言） -->
+            <!-- Comment language (controls the language used in generated comments) -->
             <div>
               <label for="commentLang" class="block text-sm text-white/70 mb-1">Comment language</label>
               <select id="commentLang" class="w-full rounded-xl bg-black/40 border border-white/15 focus:ring-2 focus:ring-white/30 px-3 py-2">
@@ -232,7 +232,7 @@
               <p class="mt-1 text-xs text-white/50">Controls the language of comments the AI adds to your code.</p>
             </div>
 
-            <!-- 注释风格（JSDoc / Google / NumPy / reST / Doxygen / Auto） -->
+            <!-- Comment style (JSDoc / Google / NumPy / reST / Doxygen / Auto) -->
             <div>
               <label for="commentStyle" class="block text-sm text-white/70 mb-1">Comment style</label>
               <select id="commentStyle" class="w-full rounded-xl bg-black/40 border border-white/15 focus:ring-2 focus:ring-white/30 px-3 py-2">
@@ -243,10 +243,10 @@
                 <option value="rst">reStructuredText (Python)</option>
                 <option value="doxygen">Doxygen / Javadoc (C/C++/Java/C#)</option>
               </select>
-              <p class="mt-1 text-xs text-white/50">Pick a doc style. Auto chooses based on the detected language.</p>
+              <p class="mt-1 text-xs text-white/50">Pick a documentation style. Auto chooses based on detected language.</p>
             </div>
 
-            <!-- 注释详尽程度（Minimal / Standard / Detailed） -->
+            <!-- Comment verbosity (Minimal / Standard / Detailed) -->
             <div>
               <label for="commentVerbosity" class="block text-sm text-white/70 mb-1">Comment detail level</label>
               <select id="commentVerbosity" class="w-full rounded-xl bg-black/40 border border-white/15 focus:ring-2 focus:ring-white/30 px-3 py-2">
@@ -257,7 +257,7 @@
               <p class="mt-1 text-xs text-white/50">Controls how deep the AI goes with docs and inline notes.</p>
             </div>
 
-            <!-- 注释内容包含项 -->
+            <!-- What to include in comments -->
             <div>
               <label class="block text-sm text-white/70 mb-1">Include in comments</label>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -281,7 +281,7 @@
                 <label for="temperature" class="text-sm text-white/70">Strength <span class="text-white/40">(强度)</span></label>
                 <span id="tempVal" class="text-sm text-white/80">0.2</span>
               </div>
-              <!-- iOS 风格滑块：圆形拇指 + 细轨道（使用原生 range + Tailwind 样式覆盖） -->
+              <!-- iOS-like slider: round thumb + thin track (native range with Tailwind overrides) -->
               <input id="temperature" type="range" min="0" max="2" step="0.1" value="0.2" class="w-full h-2 bg-white/10 rounded-full appearance-none" />
               <p class="mt-1 text-xs text-white/50">Higher → bolder rewrites; lower → conservative.</p>
             </div>
@@ -310,7 +310,7 @@
               </button>
             </div>
 
-            <!-- 模型探测结果：点击填充到 Model -->
+            <!-- Detected models: click to fill the Model field -->
             <div>
               <div class="text-sm text-white/70 mb-2">Detected models</div>
               <div id="modelsArea" class="flex flex-wrap gap-2"></div>
@@ -322,26 +322,26 @@
 
     <script>
       // ------------------------------
-      // 工具函数（与原版兼容，但增加了注释与健壮性）
+      // Utility functions (backward‑compatible; added comments & hardening)
       // ------------------------------
 
       /**
-       * 安全剥离模型可能返回的 Markdown 围栏代码块（```lang ... ```）
-       * 仅保留代码体，避免把解释性文字混入输出。
-       * 兼容：```js\n...\n``` / ```\n...\n``` / 无围栏
+       * Safely strip Markdown code fences (```lang ... ```), keeping only the code body.
+       * Prevents mixing explanatory prose into the output area.
+       * Supports: ```js\n...\n``` / ```\n...\n``` / no fences.
        *
-       * ⚠️ 细节：字符类中的连字符（-）要放在末尾或开头，避免被解析为范围。
-       * @param {string} s - 原始模型返回文本
-       * @returns {string} 去除围栏后的代码
+       * ⚠️ Note: keep hyphen (-) at the end/beginning of the character class to avoid ranges.
+       * @param {string} s - raw model text
+       * @returns {string} code without surrounding fences
        */
       function stripCodeFence(s = '') {
         if (typeof s !== 'string') return '';
         const trimmed = s.trim();
-        // 情况 A：```lang\n...\n``` —— lang 可为 js, ts, py, c++, c#, jsx, tsx, html 等
-        const fenceLang = /^```[A-Za-z0-9+_.-]*\n([\s\S]*?)\n```$/m; // 连字符放末尾，避免范围错误
+        // Case A: ```lang\n...\n``` — lang can be js, ts, py, c++, c#, jsx, tsx, html, etc.
+        const fenceLang = /^```[A-Za-z0-9+_.-]*\n([\s\S]*?)\n```$/m; // hyphen at the end to avoid range parsing
         const m1 = trimmed.match(fenceLang);
         if (m1) return m1[1].trim();
-        // 情况 B：```\n...\n```
+        // Case B: ```\n...\n```
         const fence = /^```\n([\s\S]*?)\n```$/m;
         const m2 = trimmed.match(fence);
         if (m2) return m2[1].trim();
@@ -349,13 +349,13 @@
       }
 
       /**
-       * 从用户填写的 endpoint 推断出 “/v1” 基地址，用于探测 models。
-       * 例：输入 /v1/chat/completions → 基址 /v1
+       * Derive a base "/v1" endpoint from a full Chat Completions endpoint for model probing.
+       * Example: /v1/chat/completions → /v1
        */
       function baseFromEndpoint(ep = '') {
         try {
           const url = new URL(ep);
-          // 若路径中包含 "/v1"，裁剪到 v1 为止
+          // If path contains "/v1", trim to that point
           const i = url.pathname.indexOf('/v1');
           if (i >= 0) {
             url.pathname = url.pathname.slice(0, i + 3);
@@ -363,17 +363,17 @@
             url.hash = '';
             return url.toString().replace(/\/$/, '');
           }
-          // 常见映射：/chat/completions 或 /completions /embeddings → /v1
+          // Common mapping: /chat/completions or /completions /embeddings → /v1
           url.pathname = '/v1';
           url.search = '';
           url.hash = '';
           return url.toString().replace(/\/$/, '');
         } catch (e) {
-          return ep; // 交给上层校验
+          return ep; // let the caller validate
         }
       }
 
-      /** 统一的错误展示 */
+      /** Unified error display */
       function showError(msg = '') {
         const box = document.getElementById('errorBox');
         if (!msg) {
@@ -385,7 +385,7 @@
         }
       }
 
-      /** 切换忙碌态：禁用按钮 + 文案 */
+      /** Toggle busy state: disable button + change label */
       function setBusy(isBusy) {
         const btn = document.getElementById('transformBtn');
         const label = document.getElementById('transformText');
@@ -393,7 +393,7 @@
         label.textContent = isBusy ? 'Transforming…' : 'Transform';
       }
 
-      /** 进度条更新（0–100）+ 状态文本 */
+      /** Progress bar update (0–100) + status text */
       function progress(pct = 0, text = '') {
         const bar = document.getElementById('progressBar');
         const t = document.getElementById('progressText');
@@ -404,9 +404,9 @@
       function endProgress() { progress(100, 'Done'); setTimeout(() => progress(0, 'Ready'), 450); }
 
       /**
-       * 构造消息（system + user）。
-       * - 注释语言/风格/详尽程度/包含项由设置项决定。
-       * - 强制输出“只有代码，无围栏/无转义/无弯引号/无零宽字符”。
+       * Build messages (system + user):
+       * - Comment language/style/verbosity/inclusions are taken from Settings.
+       * - Enforce raw-code-only output (no fences, escapes, curly quotes, or zero-width chars).
        */
       function buildMessages() {
         const input = document.getElementById('input').value;
@@ -468,7 +468,7 @@
           includeEdgeCases ? 'Explicitly list edge cases and key assumptions in doc comments when relevant.' : 'Do not enumerate edge cases unless strictly necessary.',
           includeComplexity ? 'Add time/space complexity notes where relevant.' : 'Do not add complexity notes.',
           includeRationale ? 'Add inline rationale comments for non‑obvious decisions and trade‑offs.' : 'Avoid inline rationale comments unless essential.'
-        ].join('\n'); // ✅ 使用转义的换行符，而不是字面换行，避免语法错误
+        ].join('\n'); // Use escaped newline, not literal line break, to avoid syntax errors when embedding
 
         // System prompt assembled from the above settings
         const system = `You are a senior software engineer who rewrites code into a modern, clean, and idiomatic style while preserving behavior.
@@ -495,33 +495,33 @@ OUTPUT RULES (avoid garbled text):
       }
 
       /**
-       * 统一清洗输出，避免“乱码”——应对 BOM、零宽字符、NBSP 等：
+       * Normalize model output to avoid garbled text — handle BOM, zero‑width chars, NBSP, quotes, and newline forms.
        *
-       * 处理步骤（顺序重要）：
-       * 1) 去除开头 BOM；2) 去除所有零宽字符范围（U+200B–U+200D 与 U+FEFF）；
-       * 3) NBSP(U+00A0)→普通空格；4) 替换弯引号为直引号；
-       * 5) 尝试 Unicode NFC 规范化；6) 统一换行为 LF。
+       * Order of operations (important):
+       * 1) Strip leading BOM; 2) Remove all zero‑width chars (U+200B–U+200D and U+FEFF);
+       * 3) Replace NBSP (U+00A0) with a normal space; 4) Straighten curly quotes;
+       * 5) Try Unicode NFC normalization; 6) Unify newlines to LF.
        */
       function normalizeOutput(s = '') {
-        // 把所有输入先转为字符串，防御 null/undefined
+        // Guard: coerce to string to handle null/undefined
         let t = String(s ?? '');
-        // 1) 开头 BOM（仅文件头会出现）
+        // 1) Leading BOM (only occurs at file head)
         t = t.replace(/^\uFEFF/, '');
-        // 2) 所有零宽字符（包括 ZWSP/ZWJ/ZWNJ 与 FEFF）
+        // 2) All zero‑width characters (ZWSP/ZWJ/ZWNJ and FEFF)
         t = t.replace(/[\u200B-\u200D\uFEFF]/g, '');
-        // 3) NBSP → 空格（保留原本的“位置”，不调整顺序）
+        // 3) NBSP → normal space (preserve original positions)
         t = t.replace(/\u00A0/g, ' ');
-        // 4) 弯引号 → 直引号（避免代码中的花体引号造成语法错误）
+        // 4) Curly quotes → straight quotes (avoid syntax issues)
         t = t.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
-        // 5) Unicode 规范化（有些平台不支持，故包裹 try/catch）
+        // 5) Unicode normalization (best effort)
         try { if (typeof t.normalize === 'function') t = t.normalize('NFC'); } catch {}
-        // 6) 统一换行（CRLF / LSEP / PSEP → LF）
+        // 6) Newlines → LF (CRLF / LSEP / PSEP)
         t = t.replace(/\r\n?|\u2028|\u2029/g, '\n');
         return t;
       }
 
       /**
-       * 探测模型列表（GET {base}/models）并渲染为可点击的 Chips。
+       * Probe the models (GET {base}/models) and render clickable chips.
        */
       async function probeModels() {
         const endpoint = document.getElementById('endpoint').value.trim();
@@ -561,14 +561,14 @@ OUTPUT RULES (avoid garbled text):
       }
 
       // ------------------------------
-      // 核心：执行一次“Transform”
+      // Core: run a single Transform
       // ------------------------------
       async function runTransform() {
         showError('');
         setBusy(true);
         progress(5, 'Validating…');
 
-        // 读取配置
+        // Read config
         const endpoint = document.getElementById('endpoint').value.trim();
         const model = document.getElementById('model').value.trim();
         const apiKey = document.getElementById('apiKey').value.trim();
@@ -577,7 +577,7 @@ OUTPUT RULES (avoid garbled text):
         const inputEl = document.getElementById('input');
         const outputEl = document.getElementById('output');
 
-        // 基本校验
+        // Basic validation
         if (!endpoint || !model) {
           showError('Endpoint & Model are required.');
           setBusy(false); endProgress(); return;
@@ -589,7 +589,7 @@ OUTPUT RULES (avoid garbled text):
 
         progress(15, 'Preparing request…');
 
-        // 组装请求体（OpenAI 兼容 Chat Completions）
+        // OpenAI‑compatible Chat Completions payload
         const body = {
           model,
           temperature,
@@ -607,7 +607,7 @@ OUTPUT RULES (avoid garbled text):
           const res = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify(body) });
           progress(55, 'Reading…');
 
-          // 错误处理：尽量给出有用的 CORS/路径/鉴权提示
+          // Error handling: try to provide helpful hints (CORS/path/auth)
           if (!res.ok) {
             const text = await res.text().catch(() => '');
             showError(`Request failed: ${res.status} ${res.statusText}.\n\nResponse: ${text || '(no body)'}\n\nHints: check CORS, endpoint path, model id, API key/port.`);
@@ -617,12 +617,12 @@ OUTPUT RULES (avoid garbled text):
           const data = await res.json();
           progress(75, 'Parsing…');
 
-          // 兼容 choices[0].message.content 或 choices[0].text
+          // Support choices[0].message.content or choices[0].text
           const raw = data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.text ?? '';
           const code = stripCodeFence(String(raw || ''));
 
           outputEl.value = normalizeOutput(code);
-          // 轻微的“已更新”视觉反馈
+          // Subtle "updated" feedback
           outputEl.classList.add('ring-2', 'ring-white/30');
           setTimeout(() => outputEl.classList.remove('ring-2', 'ring-white/30'), 480);
 
@@ -636,10 +636,10 @@ OUTPUT RULES (avoid garbled text):
       }
 
       // ------------------------------
-      // 简易自测（Dev tests）：验证正则与清洗逻辑
+      // Dev self-tests: verify regex & normalization logic
       // ------------------------------
       function runSelfTests() {
-        /** 简单断言工具 */
+        /** tiny assertion helper */
         const eq = (a, b) => a === b;
         const results = [];
         const push = (name, ok, detail = '') => results.push({ name, ok, detail });
@@ -655,26 +655,26 @@ OUTPUT RULES (avoid garbled text):
 
         // normalizeOutput core cases
         try {
-          // 修正：NBSP 在原串中位于第二个 a 与 b 之间，因此替换后应保留在该位置
+          // NBSP is between the second 'a' and 'b'; it should remain a normal space after replacement
           push('BOM + ZW + NBSP', eq(normalizeOutput("\uFEFFa\u200Ba\u00A0b\u200Da"), "aa ba"));
-          // 变体：NBSP 位于 b 之后
+          // Variant: NBSP after 'b'
           push('NBSP after b', eq(normalizeOutput("\uFEFFa\u200Bb\u00A0\u200Da"), "ab a"));
-          // 多个 NBSP：应一一替换为普通空格（不折叠）
+          // Multiple NBSP: each replaced by a normal space (no collapsing)
           push('multiple NBSP', eq(normalizeOutput("a\u00A0\u00A0b"), "a  b"));
-          // 引号矫正
+          // Quote straightening
           push('quotes straightened', eq(normalizeOutput("“a” ‘b’"), '"a" \'' + 'b\''));
-          // 换行统一
+          // Newline unification
           push('newlines unified', eq(normalizeOutput("a\r\nb\u2028c\u2029d"), "a\nb\nc\nd"));
-          // 零宽连接符/不连接符
+          // ZWJ/ZWNJ removal
           push('ZWJ/ZWNJ', eq(normalizeOutput("a\u200Ca\u200Da"), "aaa"));
-          // 无变化路径
+          // No-change path
           push('no change', eq(normalizeOutput("hello"), "hello"));
         } catch (e) { push('normalizeOutput exception', false, String(e)); }
 
-        // Join newline literal sanity (ensure our prompts use \n)
+        // Ensure we join using literal \n (not actual newlines)
         try { push('join\\n', eq(['a','b'].join('\n'), 'a\nb')); } catch (e) { push('join\\n exception', false, String(e)); }
 
-        // 展示结果到控制台 & 页面
+        // Report
         const pass = results.filter(r => r.ok).length;
         const total = results.length;
         console.group('[AI-style Code Rewriter] Self-tests');
@@ -690,21 +690,21 @@ OUTPUT RULES (avoid garbled text):
       }
 
       // ------------------------------
-      // 初始化：事件绑定、示例、持久化
+      // Init: event bindings, example, persistence
       // ------------------------------
       function init() {
         const $ = (id) => document.getElementById(id);
 
-        // 默认示例：一段“凌乱代码”，用于演示转换
+        // Default example snippet for demo
         $('input').value = `function fetchUsers(cb){fetch('/api/users').then(r=>r.json()).then(d=>{let arr=[];for(let i=0;i<d.length;i++){if(d[i]&&d[i].active){arr.push({id:d[i].id,name:d[i].name.trim()})}}cb&&cb(arr)}).catch(e=>{console.log(e)})}`;
 
-        // 温度滑块联动数值
+        // Temperature slider → live number
         const temp = $('temperature');
         const tempVal = $('tempVal');
         const syncTemp = () => (tempVal.textContent = String(Number(temp.value).toFixed(1)));
         temp.addEventListener('input', syncTemp); syncTemp();
 
-        // 复制 & 清空输出
+        // Copy & clear
         $('copyBtn').addEventListener('click', async () => {
           try {
             await navigator.clipboard.writeText($('output').value || '');
@@ -714,7 +714,7 @@ OUTPUT RULES (avoid garbled text):
         });
         $('clearBtn').addEventListener('click', () => { $('output').value = ''; });
 
-        // 打开/关闭设置抽屉
+        // Settings drawer open/close
         const panel = $('settingsPanel');
         const aside = panel.querySelector('aside');
         const openSettings = () => { panel.classList.remove('hidden'); requestAnimationFrame(() => { aside.style.transform = 'translateX(0)'; }); };
@@ -723,16 +723,16 @@ OUTPUT RULES (avoid garbled text):
         $('closeSettingsBtn').addEventListener('click', closeSettings);
         $('backdrop').addEventListener('click', closeSettings);
 
-        // 记住 API Key（可选）
+        // Remember API key locally (optional)
         const KEY = 'ai_style_api_key';
         const remember = $('rememberKey');
         const apiKey = $('apiKey');
-        // 恢复
+        // Restore
         try {
           const saved = localStorage.getItem(KEY);
           if (saved) { apiKey.value = saved; remember.checked = true; }
         } catch {}
-        // 监听变更
+        // Persist on change
         const syncKey = () => {
           try {
             if (remember.checked && apiKey.value) localStorage.setItem(KEY, apiKey.value);
@@ -742,18 +742,18 @@ OUTPUT RULES (avoid garbled text):
         remember.addEventListener('change', syncKey);
         apiKey.addEventListener('input', syncKey);
 
-        // LM Studio 一键预设
+        // LM Studio quick preset
         $('lmPresetBtn').addEventListener('click', () => {
           $('endpoint').value = 'http://localhost:1234/v1/chat/completions';
           if (!apiKey.value) apiKey.value = 'lm-studio';
         });
 
-        // 列出模型
+        // List models
         $('listModelsBtn').addEventListener('click', () => probeModels());
 
-        // 触发转换
+        // Trigger transform
         $('transformBtn').addEventListener('click', () => runTransform());
-        // 快捷键：Cmd/Ctrl + Enter
+        // Shortcut: Cmd/Ctrl + Enter
         window.addEventListener('keydown', (e) => {
           if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
             e.preventDefault();
@@ -761,18 +761,18 @@ OUTPUT RULES (avoid garbled text):
           }
         });
 
-        // 初始状态
+        // Initial state
         progress(0, 'Ready');
 
-        // 运行自测
+        // Run self-tests
         runSelfTests();
       }
 
-      // 启动
+      // Boot
       window.addEventListener('DOMContentLoaded', init);
     </script>
 
-    <!-- 开发自测结果（可选可见） -->
+    <!-- Dev self-test results (visually hidden) -->
     <div id="devTests" class="sr-only" aria-hidden="true"></div>
   </body>
 </html>
