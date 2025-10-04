@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="zh-CN" class="dark">
+<html lang="en" class="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AI 风格代码重写器 · 纯前端直连（LM Studio 适配 / 暗黑默认 / i18n）</title>
-  <!-- 先声明 Tailwind 配置，使其使用 class 方式控制暗黑模式 -->
+  <title>AI-style Code Rewriter · Frontend-only (LM Studio / Dark-only / i18n)</title>
+  <!-- Tailwind: dark mode controlled by class -->
   <script>
     tailwind = { config: { darkMode: 'class' } };
   </script>
@@ -21,56 +21,56 @@
   <div class="container mx-auto p-6 space-y-6">
     <header class="flex items-center justify-between">
       <div>
-        <h1 id="i-title" class="text-2xl font-bold">AI 风格代码重写器（前端直连 API + Prompt）</h1>
-        <div id="i-tagline" class="text-sm opacity-70">单文件 HTML · 适配 LM Studio 本地 API</div>
+        <h1 id="i-title" class="text-2xl font-bold">AI-style Code Rewriter (Frontend-only API + Prompt)</h1>
+        <div id="i-tagline" class="text-sm opacity-70">Single-file HTML · Works with LM Studio local API</div>
       </div>
       <div class="flex items-center gap-2">
-        <button id="themeToggle" class="rounded-xl border px-3 py-1 text-sm hover:bg-slate-100 dark:hover:bg-slate-800" title="Toggle theme">🌙/☀️</button>
+        <!-- Theme toggle removed; dark-only -->
         <select id="langSelect" class="rounded-xl border px-3 py-1 text-sm bg-white dark:bg-slate-800 dark:border-slate-700">
-          <option value="zh">中文</option>
           <option value="en">English</option>
+          <option value="zh">中文</option>
         </select>
       </div>
     </header>
 
-    <!-- API / 基础配置 -->
+    <!-- API / Basics -->
     <section class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-2xl shadow dark:bg-slate-800">
       <div class="col-span-1 space-y-2">
-        <label id="i-apiKeyLabel" class="text-sm font-medium">API Key（LM Studio 可留空或填 <code>lm-studio</code>）</label>
-        <input id="apiKey" type="password" placeholder="可留空；LM Studio 常用：lm-studio" class="w-full rounded-xl border p-2 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" />
+        <label id="i-apiKeyLabel" class="text-sm font-medium">API Key (LM Studio can be empty or <code>lm-studio</code>)</label>
+        <input id="apiKey" type="password" placeholder="Optional; often lm-studio" class="w-full rounded-xl border p-2 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" />
         <label class="inline-flex items-center gap-2 text-sm mt-1">
           <input id="rememberKey" type="checkbox" />
-          <span id="i-remember">记住密钥到本机（localStorage）</span>
+          <span id="i-remember">Remember key on this device (localStorage)</span>
         </label>
-        <div id="i-tokenHint" class="text-xs opacity-70">不填时将不发送 <code>Authorization</code> 请求头（更兼容部分本地服务）。</div>
+        <div id="i-tokenHint" class="text-xs opacity-70">If empty, the <code>Authorization</code> header will NOT be sent (more compatible with local servers).</div>
       </div>
       <div class="col-span-1 space-y-2">
-        <label id="i-endpointLabel" class="text-sm font-medium">LLM 端点（OpenAI 兼容）</label>
+        <label id="i-endpointLabel" class="text-sm font-medium">LLM Endpoint (OpenAI-compatible)</label>
         <input id="endpoint" placeholder="http://localhost:1234/v1/chat/completions" class="w-full rounded-xl border p-2 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" />
-        <p id="i-endpointHint" class="text-xs opacity-70">LM Studio 默认端口 <code>1234</code>，使用 <b>http</b>；需要在 LM Studio 中启用 <i>CORS</i>。</p>
+        <p id="i-endpointHint" class="text-xs opacity-70">LM Studio default port is <code>1234</code>. Use <b>http</b>; enable <i>CORS</i> in LM Studio.</p>
         <div class="flex gap-2 text-sm mt-1">
-          <button id="presetLMStudio" class="rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">LM Studio 预设</button>
-          <button id="probeModels" class="rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">检测模型</button>
+          <button id="presetLMStudio" class="rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">LM Studio Preset</button>
+          <button id="probeModels" class="rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">List Models</button>
         </div>
         <div id="modelsBox" class="text-xs mt-2 space-y-1"></div>
       </div>
       <div class="col-span-1 space-y-2">
-        <label id="i-modelLabel" class="text-sm font-medium">模型名</label>
-        <input id="model" placeholder="如：qwen2.5-7b-instruct / llama3.1-8b-instruct" class="w-full rounded-xl border p-2 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" />
+        <label id="i-modelLabel" class="text-sm font-medium">Model</label>
+        <input id="model" placeholder="e.g., qwen2.5-7b-instruct / llama3.1-8b-instruct" class="w-full rounded-xl border p-2 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" />
         <div class="grid grid-cols-3 gap-3 text-sm">
           <div class="space-y-1">
-            <label id="i-temp">温度</label>
+            <label id="i-temp">Temperature</label>
             <input id="temperature" type="range" min="0" max="1" step="0.05" value="0.2" class="w-full" />
             <div id="temperatureVal" class="opacity-70">0.20</div>
           </div>
           <div class="space-y-1">
-            <label id="i-intensity">强度（1-3）</label>
+            <label id="i-intensity">Intensity (1-3)</label>
             <input id="intensity" type="range" min="1" max="3" step="1" value="2" class="w-full" />
             <div id="intensityVal" class="opacity-70">2</div>
           </div>
           <div class="space-y-1">
             <label id="i-maxTokens">max_tokens</label>
-            <input id="maxTokens" type="number" min="1" placeholder="可留空" class="w-full rounded-xl border p-2 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" />
+            <input id="maxTokens" type="number" min="1" placeholder="optional" class="w-full rounded-xl border p-2 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" />
           </div>
         </div>
       </div>
@@ -80,67 +80,108 @@
     <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="bg-white p-4 rounded-2xl shadow space-y-2 dark:bg-slate-800">
         <div class="flex items-center justify-between">
-          <h2 id="i-styleTitle" class="font-semibold">Style Profile（可编辑 JSON）</h2>
-          <button id="resetStyle" class="text-sm underline">重置</button>
+          <h2 id="i-styleTitle" class="font-semibold">Style Profile (editable JSON)</h2>
+          <button id="resetStyle" class="text-sm underline">Reset</button>
         </div>
         <textarea id="styleProfile" class="w-full h-64 text-sm rounded-xl border p-2 mono bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"></textarea>
       </div>
       <div class="bg-white p-4 rounded-2xl shadow space-y-2 dark:bg-slate-800">
         <div class="flex items-center justify-between">
-          <h2 id="i-systemTitle" class="font-semibold">System Prompt（可按需修改）</h2>
+          <h2 id="i-systemTitle" class="font-semibold">System Prompt (editable as needed)</h2>
         </div>
-        <textarea id="systemTemplate" class="w-full h-64 text-sm rounded-xl border p-2 mono bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" readonly></textarea>
+        <textarea id="systemTemplate" class="w-full h-64 text-sm rounded-2xl border p-2 mono bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" readonly></textarea>
       </div>
     </section>
 
-    <!-- 编辑区 -->
+    <!-- Editors -->
     <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="bg-white p-4 rounded-2xl shadow space-y-2 dark:bg-slate-800">
         <div class="flex items-center justify-between">
-          <h2 id="i-inputTitle" class="font-semibold">输入代码</h2>
+          <h2 id="i-inputTitle" class="font-semibold">Input Code</h2>
           <div class="flex items-center gap-2">
-            <button id="loadSample" class="text-sm rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">填入示例</button>
+            <button id="loadSample" class="text-sm rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">Load Sample</button>
           </div>
         </div>
         <textarea id="userCode" class="w-full h-72 text-sm rounded-xl border p-2 mono bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">function add(a,b){return a+b}</textarea>
       </div>
       <div class="bg-white p-4 rounded-2xl shadow space-y-2 dark:bg-slate-800">
         <div class="flex items-center justify-between">
-          <h2 id="i-outputTitle" class="font-semibold">输出代码</h2>
+          <h2 id="i-outputTitle" class="font-semibold">Output Code</h2>
           <div class="flex items-center gap-2">
-            <button id="copyOut" class="text-sm rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">复制</button>
-            <button id="clearOut" class="text-sm rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">清空</button>
+            <button id="copyOut" class="text-sm rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">Copy</button>
+            <button id="clearOut" class="text-sm rounded-xl border px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-700">Clear</button>
           </div>
         </div>
         <textarea id="aiCode" class="w-full h-72 text-sm rounded-xl border p-2 mono bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" readonly></textarea>
       </div>
     </section>
 
-    <!-- 动作区 -->
+    <!-- Actions -->
     <section class="flex items-center gap-3">
-      <button id="runBtn" class="rounded-2xl px-4 py-2 bg-black text-white disabled:opacity-50">一键转换</button>
-      <span id="i-hint" class="text-sm opacity-70">LM Studio：请启用 <em>CORS</em>；端点形如 <code>http://localhost:1234/v1/chat/completions</code>。</span>
+      <button id="runBtn" class="rounded-2xl px-4 py-2 bg-black text-white disabled:opacity-50">Transform</button>
+      <span id="i-hint" class="text-sm opacity-70">LM Studio: enable <em>CORS</em>; endpoint looks like <code>http://localhost:1234/v1/chat/completions</code>.</span>
     </section>
 
-    <div id="errorBox" class="hidden bg-red-50 text-red-700 p-3 rounded-xl border border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-700"></div>
+    <div id="errorBox" class="hidden bg-red-50 text-red-700 p-3 rounded-2xl border border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-700"></div>
 
     <details class="bg-white p-4 rounded-2xl shadow dark:bg-slate-800">
-      <summary id="i-sseTitle" class="font-semibold cursor-pointer">想要流式输出？（可选）</summary>
+      <summary id="i-sseTitle" class="font-semibold cursor-pointer">Streaming output? (optional)</summary>
       <ol id="i-sseList" class="list-decimal list-inside space-y-1 text-sm mt-2 opacity-80">
-        <li>确认 LLM 供应商支持浏览器直连的 SSE（CORS 允许 + <code>stream: true</code>）。</li>
-        <li>请求体添加 <code>stream: true</code>，并用 <code>res.body.getReader()</code> 逐块读取。</li>
-        <li>解析 Server-Sent Events（逐行读取，以 <code>data:</code> 开头的行做 JSON.parse，直到 <code>[DONE]</code>）。</li>
+        <li>Ensure your provider supports SSE in the browser (CORS + <code>stream: true</code>).</li>
+        <li>Add <code>stream: true</code> to the request and read chunks via <code>res.body.getReader()</code>.</li>
+        <li>Parse Server-Sent Events (lines starting with <code>data:</code>) until <code>[DONE]</code>.</li>
       </ol>
     </details>
 
     <footer id="i-footer" class="text-xs opacity-70 pb-8">
-      安全提示：前端直连会暴露密钥给终端用户，仅适合个人/内网。对外发布请改用临时令牌或网关。
+      Security: exposing an API key in the browser is risky—use only locally/trusted envs. Prefer a gateway for public use.
     </footer>
   </div>
 
   <script>
     // ---------------- i18n ----------------
     const I18N = {
+      en: {
+        title: 'AI-style Code Rewriter (Frontend-only API + Prompt)',
+        tagline: 'Single-file HTML · Works with LM Studio local API',
+        apiKeyLabel: 'API Key (LM Studio can be empty or <code>lm-studio</code>)',
+        remember: 'Remember key on this device (localStorage)',
+        tokenHint: 'If empty, the <code>Authorization</code> header will NOT be sent (more compatible with local servers).',
+        endpointLabel: 'LLM Endpoint (OpenAI-compatible)',
+        endpointHint: 'LM Studio default port is <code>1234</code>. Use <b>http</b>; enable <i>CORS</i> in LM Studio.',
+        modelLabel: 'Model',
+        temp: 'Temperature',
+        intensity: 'Intensity (1-3)',
+        maxTokens: 'max_tokens',
+        styleTitle: 'Style Profile (editable JSON)',
+        systemTitle: 'System Prompt (editable as needed)',
+        inputTitle: 'Input Code',
+        outputTitle: 'Output Code',
+        copy: 'Copy', clear: 'Clear', sample: 'Load Sample', reset: 'Reset',
+        run: 'Transform', preset: 'LM Studio Preset', probe: 'List Models',
+        hint: 'LM Studio: enable <em>CORS</em>; endpoint looks like <code>http://localhost:1234/v1/chat/completions</code>.',
+        sseTitle: 'Streaming output? (optional)',
+        sseList: [
+          'Ensure your provider supports SSE in the browser (CORS + <code>stream: true</code>).',
+          'Add <code>stream: true</code> to the request and read chunks via <code>res.body.getReader()</code>.',
+          'Parse Server-Sent Events (lines starting with <code>data:</code>) until <code>[DONE]</code>.'
+        ],
+        footer: 'Security: exposing an API key in the browser is risky—use only locally/trusted envs. Prefer a gateway for public use.',
+        placeholders: {
+          apiKey: 'Optional; often lm-studio',
+          endpoint: 'http://localhost:1234/v1/chat/completions',
+          model: 'e.g., qwen2.5-7b-instruct / llama3.1-8b-instruct',
+          maxTokens: 'optional'
+        },
+        errors: {
+          fill: 'Please set endpoint / model and paste your code.',
+          notJSON: 'Response is not JSON:\n',
+          http: 'Check CORS / endpoint path / model / port.',
+          probing: 'Probing…',
+          noModels: 'No models returned. Make sure LM Studio has a model loaded.',
+          probeFail: 'Probe failed: '
+        }
+      },
       zh: {
         title: 'AI 风格代码重写器（前端直连 API + Prompt）',
         tagline: '单文件 HTML · 适配 LM Studio 本地 API',
@@ -180,47 +221,6 @@
           probing: '检测中…',
           noModels: '未返回模型；请确认 LM Studio 已加载模型。',
           probeFail: '检测失败：'
-        }
-      },
-      en: {
-        title: 'AI-style Code Rewriter (Frontend-only API + Prompt)',
-        tagline: 'Single-file HTML · Works with LM Studio local API',
-        apiKeyLabel: 'API Key (LM Studio can be empty or "lm-studio")',
-        remember: 'Remember key on this device (localStorage)',
-        tokenHint: 'If empty, the <code>Authorization</code> header will NOT be sent.',
-        endpointLabel: 'LLM Endpoint (OpenAI-compatible)',
-        endpointHint: 'LM Studio default port is <code>1234</code>. Use <b>http</b>; enable <i>CORS</i> in LM Studio.',
-        modelLabel: 'Model',
-        temp: 'Temperature',
-        intensity: 'Intensity (1-3)',
-        maxTokens: 'max_tokens',
-        styleTitle: 'Style Profile (editable JSON)',
-        systemTitle: 'System Prompt (editable as needed)',
-        inputTitle: 'Input Code',
-        outputTitle: 'Output Code',
-        copy: 'Copy', clear: 'Clear', sample: 'Load Sample', reset: 'Reset',
-        run: 'Transform', preset: 'LM Studio Preset', probe: 'List Models',
-        hint: 'LM Studio: enable <em>CORS</em>; endpoint looks like <code>http://localhost:1234/v1/chat/completions</code>.',
-        sseTitle: 'Streaming output? (optional)',
-        sseList: [
-          'Ensure your provider supports SSE in the browser (CORS + <code>stream: true</code>).',
-          'Add <code>stream: true</code> to the request and read chunks via <code>res.body.getReader()</code>.',
-          'Parse Server-Sent Events (lines starting with <code>data:</code>) until <code>[DONE]</code>.'
-        ],
-        footer: 'Security: exposing an API key in the browser is risky—use only locally/trusted envs. Prefer a gateway for public use.',
-        placeholders: {
-          apiKey: 'Optional; often "lm-studio"',
-          endpoint: 'http://localhost:1234/v1/chat/completions',
-          model: 'e.g., qwen2.5-7b-instruct / llama3.1-8b-instruct',
-          maxTokens: 'optional'
-        },
-        errors: {
-          fill: 'Please set endpoint / model and paste your code.',
-          notJSON: 'Response is not JSON:\n',
-          http: 'Check CORS / endpoint path / model / port.',
-          probing: 'Probing…',
-          noModels: 'No models returned. Make sure LM Studio has a model loaded.',
-          probeFail: 'Probe failed: '
         }
       }
     };
@@ -266,9 +266,9 @@
       localStorage.setItem('aiStyleCoder_lang', lang);
     }
 
-    function tErrors(lang){ return I18N[lang || localStorage.getItem('aiStyleCoder_lang') || 'zh'].errors; }
+    function tErrors(lang){ return I18N[lang || localStorage.getItem('aiStyleCoder_lang') || 'en'].errors; }
 
-    // ---------------- 默认 Style Profile & System Prompt ----------------
+    // ---------------- Default Style Profile & System Prompt ----------------
     const DEFAULT_STYLE = {
       naming: { variables: "camelCase", types: "PascalCase", constants: "UPPER_SNAKE_CASE" },
       structure: {
@@ -310,21 +310,18 @@
     const probeBtn = document.getElementById('probeModels');
     const modelsBox = document.getElementById('modelsBox');
     const langSelect = document.getElementById('langSelect');
-    const themeToggle = document.getElementById('themeToggle');
 
-    // ---------------- 初始值与本地存储 ----------------
+    // ---------------- Init ----------------
     function init() {
       styleProfileEl.value = JSON.stringify(DEFAULT_STYLE, null, 2);
       systemTemplateEl.value = SYSTEM_TEMPLATE;
 
-      // 语言 & 主题初始化
-      const savedLang = localStorage.getItem('aiStyleCoder_lang') || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+      // Language (default to EN)
+      const savedLang = localStorage.getItem('aiStyleCoder_lang') || 'en';
       langSelect.value = savedLang;
       applyI18n(savedLang);
 
-      const savedTheme = localStorage.getItem('aiStyleCoder_theme') || 'dark';
-      if (savedTheme === 'dark') document.documentElement.classList.add('dark');
-      else document.documentElement.classList.remove('dark');
+      // Always dark (no toggle); html already has class="dark"
 
       const savedKey = localStorage.getItem('aiStyleCoder_apiKey');
       if (savedKey) { apiKeyEl.value = savedKey; rememberKeyEl.checked = true; }
@@ -339,14 +336,9 @@
       intensityEl.addEventListener('input', () => (intensityValEl.textContent = String(intensityEl.value)));
 
       langSelect.addEventListener('change', () => applyI18n(langSelect.value));
-      themeToggle.addEventListener('click', () => {
-        document.documentElement.classList.toggle('dark');
-        const now = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-        localStorage.setItem('aiStyleCoder_theme', now);
-      });
     }
 
-    // ---------------- 工具函数 ----------------
+    // ---------------- Helpers ----------------
     function stripCodeFence(s) {
       if (!s) return s;
       const trimmed = s.trim();
@@ -359,8 +351,8 @@
     }
 
     function buildMessages() {
-      const lang = langSelect.value;
       const sys = `${SYSTEM_TEMPLATE}\n\nContext:\n- Input language: ${inputLangEl?.value || 'auto'}\n- Intensity (1-3): ${intensityEl.value}\n- Style Profile JSON:\n${styleProfileEl.value}`;
+      const lang = langSelect.value;
       const prompt = lang === 'zh'
         ? `Rewrite the following code into AI-style code, keep behavior the same.\n\n<code>\n${userCodeEl.value}\n</code>`
         : `Rewrite the following code into AI-style code while preserving behavior.\n\n<code>\n${userCodeEl.value}\n</code>`;
@@ -405,7 +397,7 @@
       } catch (e) { modelsBox.textContent = errs.probeFail + (e?.message || String(e)); }
     }
 
-    // ---------------- 主流程 ----------------
+    // ---------------- Main ----------------
     async function runTransform() {
       showError('');
       aiCodeEl.value = '';
@@ -434,7 +426,7 @@
       finally { setBusy(false); }
     }
 
-    // ---------------- 绑定事件 ----------------
+    // ---------------- Bind ----------------
     document.addEventListener('DOMContentLoaded', () => {
       init();
       document.getElementById('runBtn').addEventListener('click', runTransform);
