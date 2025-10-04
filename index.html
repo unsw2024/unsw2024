@@ -405,7 +405,7 @@
 
       /**
        * 构造消息（system + user）。
-       * - 注释语言由设置项决定（English / Chinese (Simplified)）。
+       * - 注释语言/风格/详尽程度/包含项由设置项决定。
        * - 强制输出“只有代码，无围栏/无转义/无弯引号/无零宽字符”。
        */
       function buildMessages() {
@@ -468,8 +468,7 @@
           includeEdgeCases ? 'Explicitly list edge cases and key assumptions in doc comments when relevant.' : 'Do not enumerate edge cases unless strictly necessary.',
           includeComplexity ? 'Add time/space complexity notes where relevant.' : 'Do not add complexity notes.',
           includeRationale ? 'Add inline rationale comments for non‑obvious decisions and trade‑offs.' : 'Avoid inline rationale comments unless essential.'
-        ].join('
-');
+        ].join('\n'); // ✅ 使用转义的换行符，而不是字面换行，避免语法错误
 
         // System prompt assembled from the above settings
         const system = `You are a senior software engineer who rewrites code into a modern, clean, and idiomatic style while preserving behavior.
@@ -488,9 +487,7 @@ OUTPUT RULES (avoid garbled text):
 - Use LF line endings (\n).
 - Keep APIs/semantics identical; prefer early returns, small functions, clear naming.`;
 
-        const user = `<code>
-${input}
-</code>`;
+        const user = `<code>\n${input}\n</code>`;
         return [
           { role: 'system', content: system },
           { role: 'user', content: user },
@@ -650,6 +647,8 @@ ${input}
         // stripCodeFence cases
         try {
           push('fenceLang js', eq(stripCodeFence("```js\nconsole.log('x');\n```"), "console.log('x');"));
+          push('fenceLang c++', eq(stripCodeFence("```c++\nint x=0;\n```"), "int x=0;"));
+          push('fenceLang tsx', eq(stripCodeFence("```tsx\nconst A=()=>null;\n```"), "const A=()=>null;"));
           push('fence plain', eq(stripCodeFence("```\na\nb\n```"), "a\nb"));
           push('no fence', eq(stripCodeFence("foo"), "foo"));
         } catch (e) { push('stripCodeFence exception', false, String(e)); }
@@ -666,9 +665,14 @@ ${input}
           push('quotes straightened', eq(normalizeOutput("“a” ‘b’"), '"a" \'' + 'b\''));
           // 换行统一
           push('newlines unified', eq(normalizeOutput("a\r\nb\u2028c\u2029d"), "a\nb\nc\nd"));
+          // 零宽连接符/不连接符
+          push('ZWJ/ZWNJ', eq(normalizeOutput("a\u200Ca\u200Da"), "aaa"));
           // 无变化路径
           push('no change', eq(normalizeOutput("hello"), "hello"));
         } catch (e) { push('normalizeOutput exception', false, String(e)); }
+
+        // Join newline literal sanity (ensure our prompts use \n)
+        try { push('join\\n', eq(['a','b'].join('\n'), 'a\nb')); } catch (e) { push('join\\n exception', false, String(e)); }
 
         // 展示结果到控制台 & 页面
         const pass = results.filter(r => r.ok).length;
