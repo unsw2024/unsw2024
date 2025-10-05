@@ -3,12 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI‑style Code Rewriter • Apple‑inspired</title>
+    <title>AI‑style Code Rewriter</title>
 
     <!--
-      Design notes (Apple‑inspired highlights)
+      Design notes
       ---------------------------------------------------------------------
-      • Typography: use -apple-system (San Francisco) stack; restrained weights and tracking.
       • Layout: large title + card sections; generous spacing; aligned controls and clear hierarchy.
       • Visuals: dark base + translucent glass (backdrop-blur); subtle glow shadows; hairline dividers.
       • Motion: gentle transitions and scale feedback; honor prefers-reduced-motion.
@@ -20,7 +19,6 @@
     <script>
       /*
         Tailwind on CDN: customize fonts and shadows via global tailwind.config.
-        Add iOS-like shadows, radii, and an Apple system font stack.
       */
       window.tailwind = window.tailwind || {};
       tailwind.config = {
@@ -43,7 +41,6 @@
               ios: '0 10px 30px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.06) inset',
             },
             colors: {
-              // Apple-like neutral surfaces (approximation)
               surface: {
                 50: 'rgba(255,255,255,0.04)',
                 100: 'rgba(255,255,255,0.06)',
@@ -88,7 +85,7 @@
       /* Friendlier monospace for code areas */
       textarea, code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
-      /* Apple‑style accent button (luminous gradient) */
+      /* Accent button (luminous gradient) */
       .accent-btn { background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%); color: #fff; box-shadow: 0 10px 30px rgba(168,85,247,0.25); }
       .accent-btn:hover { filter: brightness(1.05); }
       .accent-btn:disabled { opacity: .6; cursor: not-allowed; }
@@ -203,7 +200,7 @@
 
           <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
             <!--
-              Connection settings styled with Apple-like forms:
+              Connection settings styled:
               - Labels stacked above controls; rounded fields on glassy backgrounds
             -->
             <div>
